@@ -2,6 +2,8 @@
     <!-- Reminders: show notifications, and re-schedule them after the phone restarts -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Automatic step counting (Android 10+ asks the user for this) -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
 
     <application
         android:label="HealthMate"

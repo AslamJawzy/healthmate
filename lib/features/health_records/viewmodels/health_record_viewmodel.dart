@@ -163,6 +163,39 @@ class HealthRecordViewModel extends ChangeNotifier {
     ));
   }
 
+  /// Saves automatically counted steps and estimated calories for [date].
+  /// It never lowers a value: if the user typed a higher number by hand
+  /// (for example calories from a gym session), that number is kept.
+  Future<void> applyAutoActivity({
+    required DateTime date,
+    required int steps,
+    required int calories,
+  }) async {
+    try {
+      // Ask the database directly, in case the list has not loaded yet.
+      final existing = await _repository.getRecordByDate(AppDateUtils.toDbString(date));
+      if (existing == null) {
+        await _repository.insertRecord(HealthRecord(
+          date: AppDateUtils.toDbString(date),
+          steps: steps.clamp(0, Validators.maxSteps),
+          calories: calories.clamp(0, Validators.maxCalories),
+          water: 0,
+        ));
+      } else {
+        final newSteps = steps > existing.steps ? steps : existing.steps;
+        final newCalories = calories > existing.calories ? calories : existing.calories;
+        if (newSteps == existing.steps && newCalories == existing.calories) return;
+        await _repository.updateRecord(existing.copyWith(
+          steps: newSteps.clamp(0, Validators.maxSteps),
+          calories: newCalories.clamp(0, Validators.maxCalories),
+        ));
+      }
+      await loadRecords();
+    } catch (e) {
+      debugPrint('applyAutoActivity error: $e');
+    }
+  }
+
   // ---------- Search / filter ----------
   void setFilter(RecordFilter filter) {
     _filter = filter;

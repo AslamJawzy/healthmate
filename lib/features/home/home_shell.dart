@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../activity/viewmodels/step_tracker_viewmodel.dart';
 import '../breathing/views/breathing_screen.dart';
 import '../dashboard/views/dashboard_screen.dart';
 import '../food/views/food_log_screen.dart';
@@ -11,6 +12,7 @@ import '../health_records/views/records_list_screen.dart';
 import '../reminders/services/notification_service.dart';
 import '../reminders/viewmodels/reminder_viewmodel.dart';
 import '../reminders/views/screen_time_dialog.dart';
+import '../settings/viewmodels/settings_viewmodel.dart';
 import '../settings/views/settings_screen.dart';
 import '../sleep/views/sleep_screen.dart';
 
@@ -28,6 +30,7 @@ class AppTab {
 /// IndexedStack keeps each tab alive, so scroll positions are not lost.
 ///
 /// It also:
+///  - starts automatic step counting and saves steps when the app is paused
 ///  - opens the right screen when a reminder notification is tapped
 ///  - shows the screen time pop-up after 1 hour of continuous use
 class HomeShell extends StatefulWidget {
@@ -55,6 +58,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       // Ask for notification permission once reminders are switched on.
       final reminders = context.read<ReminderViewModel>();
       if (reminders.settings.anyEnabled) await reminders.requestPermission();
+      // Start automatic step counting (asks for activity permission once).
+      if (!mounted) return;
+      final settings = context.read<SettingsViewModel>();
+      final tracker = context.read<StepTrackerViewModel>();
+      if (!settings.loaded) await settings.load();
+      await tracker.start();
       // The app may have been opened by tapping a notification.
       final payload = await NotificationService.instance.launchPayload();
       _handleNotificationTap(payload);
@@ -71,7 +80,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   /// Restart the timer whenever the user comes back to the app.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _sessionStart = DateTime.now();
+    final tracker = context.read<StepTrackerViewModel>();
+    if (state == AppLifecycleState.resumed) {
+      _sessionStart = DateTime.now();
+      tracker.start(); // pick up steps walked while the app was closed
+    } else if (state == AppLifecycleState.paused) {
+      tracker.flush(); // save the latest steps before leaving
+    }
   }
 
   void _checkScreenTime() {

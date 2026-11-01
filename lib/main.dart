@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'features/activity/services/step_counter_service.dart';
+import 'features/activity/viewmodels/step_tracker_viewmodel.dart';
 import 'features/dashboard/viewmodels/dashboard_viewmodel.dart';
 import 'features/food/repositories/food_repository.dart';
 import 'features/food/viewmodels/food_viewmodel.dart';
@@ -33,6 +35,14 @@ void main() {
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
         ChangeNotifierProvider(
           create: (_) => SettingsViewModel(SettingsRepository())..load(),
+        ),
+        // Listed after the two ViewModels it needs, so it can read them.
+        ChangeNotifierProvider(
+          create: (ctx) => StepTrackerViewModel(
+            StepCounterService(),
+            ctx.read<HealthRecordViewModel>(),
+            ctx.read<SettingsViewModel>(),
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => FoodViewModel(FoodRepository())..loadEntries(),

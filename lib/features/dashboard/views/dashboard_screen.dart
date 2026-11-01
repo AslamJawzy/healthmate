@@ -8,6 +8,7 @@ import '../../../core/utils/metric.dart';
 import '../../../core/utils/period.dart';
 import '../../../core/widgets/metric_card.dart';
 import '../../../core/widgets/period_selector.dart';
+import '../../activity/viewmodels/step_tracker_viewmodel.dart';
 import '../../breathing/views/breathing_screen.dart';
 import '../../health_records/viewmodels/health_record_viewmodel.dart';
 import '../../health_records/views/add_edit_record_screen.dart';
@@ -46,6 +47,7 @@ class DashboardScreen extends StatelessWidget {
     final recordsVm = context.watch<HealthRecordViewModel>();
     final dashVm = context.watch<DashboardViewModel>();
     final settings = context.watch<SettingsViewModel>();
+    final tracker = context.watch<StepTrackerViewModel>();
     final theme = Theme.of(context);
 
     final summary = recordsVm.summaryFor(dashVm.period, dashVm.anchorDate);
@@ -120,6 +122,30 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
+
+            // ---------- Automatic step tracking status (today only) ----------
+            if (isDay && AppDateUtils.isToday(dashVm.anchorDate) && settings.autoTrackSteps)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      tracker.isTracking ? Icons.sensors : Icons.sensors_off,
+                      size: 18,
+                      color: tracker.isTracking ? AppColors.steps : theme.colorScheme.outline,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        tracker.isTracking
+                            ? 'Live: ${Fmt.number(tracker.todaySteps)} steps, about ${Fmt.number(tracker.estimatedCalories)} kcal burned'
+                            : tracker.statusText,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             // ---------- Prompt when the day has no record ----------
             if (isDay && summary.isEmpty) ...[

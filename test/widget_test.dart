@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:healthmate/core/utils/activity_calculator.dart';
 import 'package:healthmate/core/utils/app_date_utils.dart';
 import 'package:healthmate/core/utils/period.dart';
 import 'package:healthmate/core/utils/validators.dart';
+import 'package:healthmate/features/activity/models/step_counter_state.dart';
 import 'package:healthmate/features/health_records/models/health_record.dart';
+import 'package:healthmate/features/settings/models/user_settings.dart';
 
 /// Unit tests. Run them with:  flutter test
 void main() {
@@ -54,6 +57,48 @@ void main() {
       final range = AppDateUtils.rangeFor(Period.month, DateTime(2026, 2, 10));
       expect(range.start, DateTime(2026, 2, 1));
       expect(range.end, DateTime(2026, 2, 28));
+    });
+  });
+
+  group('Automatic step counter', () {
+    test('first reading starts at 0 steps', () {
+      final s = StepCounterState.update(null, 5000, '2026-08-18');
+      expect(s.todaySteps, 0);
+    });
+
+    test('steps increase during the day', () {
+      final a = StepCounterState.update(null, 1000, '2026-08-18');
+      final b = StepCounterState.update(a, 1500, '2026-08-18');
+      expect(b.todaySteps, 500);
+    });
+
+    test('phone restart keeps the steps already counted', () {
+      final a = StepCounterState.update(null, 1000, '2026-08-18');
+      final b = StepCounterState.update(a, 1500, '2026-08-18'); // 500 today
+      final c = StepCounterState.update(b, 200, '2026-08-18'); // restarted, sensor at 200
+      expect(c.todaySteps, 700);
+    });
+
+    test('a new day starts counting again', () {
+      final a = StepCounterState.update(null, 1000, '2026-08-18');
+      final b = StepCounterState.update(a, 1500, '2026-08-18');
+      final c = StepCounterState.update(b, 1600, '2026-08-19');
+      expect(c.todaySteps, 100);
+    });
+  });
+
+  group('Calories from steps', () {
+    test('8,000 steps for a 170 cm, 70 kg male is about 209 kcal', () {
+      final kcal = ActivityCalculator.caloriesFromSteps(
+          steps: 8000, heightCm: 170, weightKg: 70, gender: Gender.male);
+      expect(kcal, 209);
+    });
+
+    test('0 steps burns 0 kcal', () {
+      expect(
+          ActivityCalculator.caloriesFromSteps(
+              steps: 0, heightCm: 170, weightKg: 70, gender: Gender.female),
+          0);
     });
   });
 }
