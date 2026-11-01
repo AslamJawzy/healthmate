@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/validators.dart';
+import '../../activity/viewmodels/step_tracker_viewmodel.dart';
 import '../../reminders/views/reminders_screen.dart';
+import '../models/user_settings.dart';
 import '../viewmodels/settings_viewmodel.dart';
 
-/// VIEW: lets the user change daily goals and the app theme.
+/// VIEW: lets the user change their profile, daily goals and the app theme.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -17,6 +19,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _profileKey = GlobalKey<FormState>();
+  late final TextEditingController _height;
+  late final TextEditingController _weight;
+  Gender _gender = Gender.male;
+  bool _filled = false; // fields filled from saved settings yet?
   late final TextEditingController _steps;
   late final TextEditingController _calories;
   late final TextEditingController _water;
@@ -25,15 +32,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final vm = context.read<SettingsViewModel>();
-    _steps = TextEditingController(text: vm.stepsGoal.toString());
-    _calories = TextEditingController(text: vm.caloriesGoal.toString());
-    _water = TextEditingController(text: vm.waterGoal.toString());
-    _food = TextEditingController(text: vm.foodGoal.toString());
+    _height = TextEditingController();
+    _weight = TextEditingController();
+    _steps = TextEditingController();
+    _calories = TextEditingController();
+    _water = TextEditingController();
+    _food = TextEditingController();
+  }
+
+  /// Settings load from storage after the screen is created, so the
+  /// fields are filled once the saved values are available.
+  void _fillFields(SettingsViewModel vm) {
+    _height.text = vm.heightCm.toString();
+    _weight.text = vm.weightKg % 1 == 0 ? vm.weightKg.toInt().toString() : vm.weightKg.toString();
+    _gender = vm.gender;
+    _steps.text = vm.stepsGoal.toString();
+    _calories.text = vm.caloriesGoal.toString();
+    _water.text = vm.waterGoal.toString();
+    _food.text = vm.foodGoal.toString();
+    _filled = true;
   }
 
   @override
   void dispose() {
+    _height.dispose();
+    _weight.dispose();
     _steps.dispose();
     _calories.dispose();
     _water.dispose();
@@ -54,10 +77,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     messenger.showSnackBar(SnackBar(content: Text(error ?? 'Goals saved')));
   }
 
+  Future<void> _saveProfile() async {
+    if (!_profileKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    final messenger = ScaffoldMessenger.of(context);
+    final error = await context.read<SettingsViewModel>().updateProfile(
+          heightCm: int.parse(_height.text),
+          weightKg: double.parse(_weight.text),
+          gender: _gender,
+        );
+    messenger.showSnackBar(SnackBar(content: Text(error ?? 'Profile saved')));
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<SettingsViewModel>();
+    final tracker = context.watch<StepTrackerViewModel>();
     final theme = Theme.of(context);
+    if (vm.loaded && !_filled) _fillFields(vm);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -77,6 +114,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
+
+          // ---------- Profile ----------
+          Text('Your profile', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text('Used to estimate calories burned from your steps.', style: theme.textTheme.bodySmall),
+          const SizedBox(height: 12),
+          Form(
+            key: _profileKey,
+            child: Column(
+              children: [
+                SegmentedButton<Gender>(
+                  segments: Gender.values
+                      .map((g) => ButtonSegment<Gender>(value: g, label: Text(g.label)))
+                      .toList(),
+                  selected: {_gender},
+                  onSelectionChanged: (s) => setState(() => _gender = s.first),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _height,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        decoration: const InputDecoration(
+                          labelText: 'Height',
+                          suffixText: 'cm',
+                          prefixIcon: Icon(Icons.height),
+                        ),
+                        validator: Validators.height,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _weight,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        decoration: const InputDecoration(
+                          labelText: 'Weight',
+                          suffixText: 'kg',
+                          prefixIcon: Icon(Icons.monitor_weight_outlined),
+                        ),
+                        validator: Validators.weight,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  onPressed: _saveProfile,
+                  icon: const Icon(Icons.person),
+                  label: const Text('Save profile'),
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(AppIcons.steps, color: AppColors.steps),
+            title: const Text('Count steps automatically'),
+            subtitle: Text(tracker.statusText),
+            value: vm.autoTrackSteps,
+            onChanged: (on) async {
+              await vm.setAutoTrackSteps(on);
+              if (on) {
+                await tracker.start();
+              } else {
+                tracker.stop();
+              }
+            },
+          ),
+          const Divider(height: 32),
 
           // ---------- Daily goals ----------
           Text('Daily goals', style: theme.textTheme.titleMedium),

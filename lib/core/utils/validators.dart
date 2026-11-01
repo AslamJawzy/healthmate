@@ -50,6 +50,23 @@ class Validators {
     return null;
   }
 
+  /// Height in whole centimetres, 100 to 250.
+  static String? height(String? value) {
+    final basic = wholeNumber(value, fieldName: 'Height', max: 250);
+    if (basic != null) return basic;
+    if (int.parse(value!.trim()) < 100) return 'Height should be at least 100 cm';
+    return null;
+  }
+
+  /// Weight in kg, decimals allowed, 25 to 300.
+  static String? weight(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Please enter Weight';
+    final number = double.tryParse(value.trim());
+    if (number == null) return 'Weight must be a number';
+    if (number < 25 || number > 300) return 'Weight should be between 25 and 300 kg';
+    return null;
+  }
+
   /// A record cannot be added for a future date.
   static String? notFutureDate(DateTime? date, DateTime today) {
     if (date == null) return 'Please choose a date';
