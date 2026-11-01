@@ -37,6 +37,19 @@ class Validators {
   static String? water(String? v) =>
       wholeNumber(v, fieldName: 'Water intake', max: maxWater);
 
+  /// Goals must be within a sensible range (a goal of 0 makes no sense).
+  static String? goal(
+    String? value, {
+    required String fieldName,
+    required int min,
+    required int max,
+  }) {
+    final basic = wholeNumber(value, fieldName: fieldName, max: max);
+    if (basic != null) return basic;
+    if (int.parse(value!.trim()) < min) return '$fieldName should be at least $min';
+    return null;
+  }
+
   /// A record cannot be added for a future date.
   static String? notFutureDate(DateTime? date, DateTime today) {
     if (date == null) return 'Please choose a date';

@@ -20,6 +20,10 @@ dependencies:
   path: ^1.9.0
   # Date and number formatting
   intl: ^0.20.2
+  # Saves small settings (goals, theme) as key/value pairs
+  shared_preferences: ^2.3.0
+  # Bar chart for the last 7 days
+  fl_chart: ^1.0.0
 
 dev_dependencies:
   flutter_test:
