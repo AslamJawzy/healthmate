@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/validators.dart';
+import '../../reminders/views/reminders_screen.dart';
 import '../viewmodels/settings_viewmodel.dart';
 
 /// VIEW: lets the user change daily goals and the app theme.
@@ -63,6 +64,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ---------- Reminders ----------
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.notifications_active),
+              title: const Text('Reminders'),
+              subtitle: const Text('Breathing, water, move and screen time'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RemindersScreen()),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
           // ---------- Daily goals ----------
           Text('Daily goals', style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
