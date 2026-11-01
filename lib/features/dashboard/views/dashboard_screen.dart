@@ -8,16 +8,22 @@ import '../../../core/utils/metric.dart';
 import '../../../core/utils/period.dart';
 import '../../../core/widgets/metric_card.dart';
 import '../../../core/widgets/period_selector.dart';
+import '../../breathing/views/breathing_screen.dart';
 import '../../health_records/viewmodels/health_record_viewmodel.dart';
 import '../../health_records/views/add_edit_record_screen.dart';
 import '../../settings/viewmodels/settings_viewmodel.dart';
 import '../viewmodels/dashboard_viewmodel.dart';
+import '../../home/home_shell.dart';
 import '../widgets/weekly_chart.dart';
+import '../widgets/wellness_section.dart';
 
 /// VIEW LAYER
 /// Summary of today's activity (Day by default), or a week / month.
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  /// Lets the Dashboard switch to another tab (e.g. Food or Sleep).
+  final ValueChanged<int> onOpenTab;
+
+  const DashboardScreen({super.key, required this.onOpenTab});
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -62,6 +68,15 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('HealthMate'),
+        actions: [
+          IconButton(
+            tooltip: 'Breathing exercise',
+            icon: const Icon(Icons.self_improvement, color: AppColors.breathing),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BreathingScreen()),
+            ),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: recordsVm.loadRecords,
@@ -191,8 +206,16 @@ class DashboardScreen extends StatelessWidget {
               ),
             ],
 
+            // ---------- Food, sleep and breathing ----------
+            const SizedBox(height: 20),
+            WellnessSection(
+              caloriesBurnedToday: recordsVm.recordForDate(AppDateUtils.today())?.calories ?? 0,
+              onOpenFood: () => onOpenTab(AppTab.food),
+              onOpenSleep: () => onOpenTab(AppTab.sleep),
+            ),
+
             // ---------- Weekly chart ----------
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             WeeklyChart(
               endDate: chartEnd,
               recordFor: recordsVm.recordForDate,

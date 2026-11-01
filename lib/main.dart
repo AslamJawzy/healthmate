@@ -3,10 +3,14 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'features/dashboard/viewmodels/dashboard_viewmodel.dart';
+import 'features/food/repositories/food_repository.dart';
+import 'features/food/viewmodels/food_viewmodel.dart';
 import 'features/health_records/repositories/health_record_repository.dart';
 import 'features/health_records/viewmodels/health_record_viewmodel.dart';
 import 'features/settings/repositories/settings_repository.dart';
 import 'features/settings/viewmodels/settings_viewmodel.dart';
+import 'features/sleep/repositories/sleep_repository.dart';
+import 'features/sleep/viewmodels/sleep_viewmodel.dart';
 
 /// Entry point of the app.
 /// MultiProvider makes the ViewModels available to every screen below it.
@@ -22,6 +26,12 @@ void main() {
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
         ChangeNotifierProvider(
           create: (_) => SettingsViewModel(SettingsRepository())..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => FoodViewModel(FoodRepository())..loadEntries(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SleepViewModel(SleepRepository())..load(),
         ),
       ],
       child: const HealthMateApp(),
