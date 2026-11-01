@@ -1,0 +1,30 @@
+name: healthmate
+description: "HealthMate - Personal Health & Wellness Tracker."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management (MVVM ViewModels with ChangeNotifier)
+  provider: ^6.1.2
+  # Embedded SQLite database (required by the coursework)
+  sqflite: ^2.4.1
+  # Builds the database file path in a platform-safe way
+  path: ^1.9.0
+  # Date and number formatting
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

@@ -46,9 +46,3 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
-
-# TEMP
-/lib/
-/test/
-/pubspec.yaml
-/pubspec.lock
