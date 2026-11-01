@@ -9,6 +9,7 @@ class SettingsRepository {
   static const _kStepsGoal = 'goal_steps';
   static const _kCaloriesGoal = 'goal_calories';
   static const _kWaterGoal = 'goal_water';
+  static const _kFoodGoal = 'goal_food';
   static const _kThemeMode = 'theme_mode';
 
   Future<UserSettings> load() async {
@@ -18,6 +19,7 @@ class SettingsRepository {
       stepsGoal: prefs.getInt(_kStepsGoal) ?? defaults.stepsGoal,
       caloriesGoal: prefs.getInt(_kCaloriesGoal) ?? defaults.caloriesGoal,
       waterGoal: prefs.getInt(_kWaterGoal) ?? defaults.waterGoal,
+      foodGoal: prefs.getInt(_kFoodGoal) ?? defaults.foodGoal,
       themeMode: _themeFromString(prefs.getString(_kThemeMode)),
     );
   }
@@ -26,11 +28,13 @@ class SettingsRepository {
     required int steps,
     required int calories,
     required int water,
+    required int food,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kStepsGoal, steps);
     await prefs.setInt(_kCaloriesGoal, calories);
     await prefs.setInt(_kWaterGoal, water);
+    await prefs.setInt(_kFoodGoal, food);
   }
 
   Future<void> saveThemeMode(ThemeMode mode) async {

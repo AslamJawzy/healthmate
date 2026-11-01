@@ -16,6 +16,7 @@ class SettingsViewModel extends ChangeNotifier {
   int get stepsGoal => _settings.stepsGoal;
   int get caloriesGoal => _settings.caloriesGoal;
   int get waterGoal => _settings.waterGoal;
+  int get foodGoal => _settings.foodGoal;
   ThemeMode get themeMode => _settings.themeMode;
 
   Future<void> load() async {
@@ -31,13 +32,15 @@ class SettingsViewModel extends ChangeNotifier {
     required int steps,
     required int calories,
     required int water,
+    required int food,
   }) async {
     try {
-      await _repository.saveGoals(steps: steps, calories: calories, water: water);
+      await _repository.saveGoals(steps: steps, calories: calories, water: water, food: food);
       _settings = _settings.copyWith(
         stepsGoal: steps,
         caloriesGoal: calories,
         waterGoal: water,
+        foodGoal: food,
       );
       notifyListeners();
       return null;

@@ -19,6 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _steps;
   late final TextEditingController _calories;
   late final TextEditingController _water;
+  late final TextEditingController _food;
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _steps = TextEditingController(text: vm.stepsGoal.toString());
     _calories = TextEditingController(text: vm.caloriesGoal.toString());
     _water = TextEditingController(text: vm.waterGoal.toString());
+    _food = TextEditingController(text: vm.foodGoal.toString());
   }
 
   @override
@@ -34,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _steps.dispose();
     _calories.dispose();
     _water.dispose();
+    _food.dispose();
     super.dispose();
   }
 
@@ -45,6 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           steps: int.parse(_steps.text),
           calories: int.parse(_calories.text),
           water: int.parse(_water.text),
+          food: int.parse(_food.text),
         );
     messenger.showSnackBar(SnackBar(content: Text(error ?? 'Goals saved')));
   }
@@ -77,6 +81,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 12),
                 _goalField(_water, 'Water goal', 'ml', AppIcons.water, AppColors.water,
                     (v) => Validators.goal(v, fieldName: 'Water goal', min: 250, max: Validators.maxWater)),
+                const SizedBox(height: 12),
+                _goalField(_food, 'Food calories target', 'kcal', Icons.restaurant, AppColors.food,
+                    (v) => Validators.goal(v, fieldName: 'Food target', min: 800, max: 6000)),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: _saveGoals,
