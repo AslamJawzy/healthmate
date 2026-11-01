@@ -21,6 +21,20 @@ class RemindersScreen extends StatelessWidget {
     if (picked != null) await vm.update(apply(picked));
   }
 
+  Future<void> _sendTest(BuildContext context) async {
+    final vm = context.read<ReminderViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    final granted = await vm.requestPermission();
+    if (!granted) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Please allow notifications for HealthMate in your phone settings.'),
+      ));
+      return;
+    }
+    await vm.sendTest();
+    messenger.showSnackBar(const SnackBar(content: Text('Test notification sent')));
+  }
+
   String _times(BuildContext context, List<TimeOfDay> times) {
     if (times.isEmpty) return 'No times between wake-up and bed time';
     if (times.length <= 3) return times.map((t) => t.format(context)).join(', ');
@@ -34,7 +48,16 @@ class RemindersScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reminders')),
+      appBar: AppBar(
+        title: const Text('Reminders'),
+        actions: [
+          IconButton(
+            tooltip: 'Send a test notification',
+            icon: const Icon(Icons.notifications_active),
+            onPressed: () => _sendTest(context),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -121,17 +144,7 @@ class RemindersScreen extends StatelessWidget {
             leading: const Icon(Icons.notifications_active),
             title: const Text('Send a test notification'),
             subtitle: const Text('Tap the notification to open the breathing exercise'),
-            onTap: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              final granted = await vm.requestPermission();
-              if (!granted) {
-                messenger.showSnackBar(const SnackBar(
-                  content: Text('Please allow notifications for HealthMate in your phone settings.'),
-                ));
-                return;
-              }
-              await vm.sendTest();
-            },
+            onTap: () => _sendTest(context),
           ),
           ListTile(
             leading: const Icon(Icons.phone_android),

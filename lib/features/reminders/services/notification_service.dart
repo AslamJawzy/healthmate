@@ -11,7 +11,6 @@ class NotificationService {
   static final NotificationService instance = NotificationService._();
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
-  bool _initialised = false;
 
   /// Called when the user taps a notification (payload says which one).
   void Function(String? payload)? onTap;
@@ -19,8 +18,13 @@ class NotificationService {
   static const _channelId = 'healthmate_reminders';
   static const _channelName = 'Health reminders';
 
-  Future<void> init() async {
-    if (_initialised) return;
+  Future<void>? _initFuture;
+
+  /// Safe to call many times: the plugin is only set up once, and every
+  /// caller waits for that same setup to finish.
+  Future<void> init() => _initFuture ??= _init();
+
+  Future<void> _init() async {
     tz_data.initializeTimeZones();
 
     const settings = InitializationSettings(
@@ -35,11 +39,11 @@ class NotificationService {
       settings: settings,
       onDidReceiveNotificationResponse: (response) => onTap?.call(response.payload),
     );
-    _initialised = true;
   }
 
   /// If the app was opened by tapping a notification, returns its payload.
   Future<String?> launchPayload() async {
+    await init();
     final details = await _plugin.getNotificationAppLaunchDetails();
     if (details == null || !details.didNotificationLaunchApp) return null;
     return details.notificationResponse?.payload;
@@ -47,6 +51,7 @@ class NotificationService {
 
   /// Android 13+ and iOS ask the user before showing notifications.
   Future<bool> requestPermission() async {
+    await init();
     final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
       return await android.requestNotificationsPermission() ?? false;
