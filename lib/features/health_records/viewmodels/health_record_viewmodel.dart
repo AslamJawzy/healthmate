@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/utils/app_date_utils.dart';
 import '../../../core/utils/period.dart';
+import '../../../core/utils/validators.dart';
 import '../../dashboard/models/period_summary.dart';
 import '../models/health_record.dart';
 import '../repositories/health_record_repository.dart';
@@ -144,6 +145,22 @@ class HealthRecordViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('restoreRecord error: $e');
     }
+  }
+
+  /// Quick add water from the Dashboard (+250 ml / +500 ml).
+  /// Updates the day's record, or creates one if the day has none yet.
+  Future<String?> addWater(DateTime date, int ml) async {
+    final existing = recordForDate(date);
+    if (existing != null) {
+      final newWater = (existing.water + ml).clamp(0, Validators.maxWater);
+      return updateRecord(existing.copyWith(water: newWater));
+    }
+    return addRecord(HealthRecord(
+      date: AppDateUtils.toDbString(date),
+      steps: 0,
+      calories: 0,
+      water: ml,
+    ));
   }
 
   // ---------- Search / filter ----------
